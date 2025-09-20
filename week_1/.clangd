@@ -1,0 +1,2 @@
+CompileFlags:
+  Add: [-I/opt/cray/pe/mpich/8.1.23/ofi/crayclang/10.0/include, -Iinclude]
