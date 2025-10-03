@@ -4,8 +4,18 @@
 #include <mpi.h>
 
 /*
-Function to get string prefix for the current MPI rank (for printing)
-*/
+ * A custom implementation of broadcast
+ */
+int my_mpi_broadcast(void *buffer, int count, MPI_Datatype datatype, int src, int *dsts, MPI_Comm comm) {}
+
+/*
+ * A custom implementation of scatter
+ */
+int my_mpi_scatter() {}
+
+/*
+ * Function to get string prefix for the current MPI rank (for printing)
+ */
 #define mpi_rank_prefix() { \
   int rank; \
   MPI_Comm_rank(MPI_COMM_WORLD, &rank); \
@@ -14,9 +24,20 @@ Function to get string prefix for the current MPI rank (for printing)
   prefix; \
 }
 
+
 /*
-MPI print to only print with processor 0 (no verbose logging)
-*/
+ * MPI print array with all processors
+ */
+#define mpi_print_int_array(x, size) { \
+	mpi_printf("Array: "); \
+	for (int i = 0; i < size; i++) { \
+		mpi_printf("%d ", x[i]); \
+	} \
+} \
+
+/*
+ * MPI print to only print with processor 0 (no verbose logging)
+ */
 #define mpi_printf_once(...) { \
   int rank; \
   MPI_Comm_rank(MPI_COMM_WORLD, &rank); \
@@ -25,6 +46,9 @@ MPI print to only print with processor 0 (no verbose logging)
   } \
 }
 
+/*
+ * MPI print with all processors
+ */
 #define mpi_printf(...) { \
   int rank; \
   MPI_Comm_rank(MPI_COMM_WORLD, &rank); \

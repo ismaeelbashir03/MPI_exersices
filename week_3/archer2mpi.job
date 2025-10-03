@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Slurm job options (name, compute nodes, job time)
+#SBATCH --ntasks=10
+#SBATCH --nodes=1
+#SBATCH --job-name=hello
+#SBATCH --time=00:01:00
+#SBATCH --output=output/%x-%j.out
+#SBATCH --cpus-per-task=1
+#SBATCH --partition=standard
+#SBATCH --tasks-per-node=128
+#SBATCH --qos=standard
+#SBATCH --account=m25ext
+
+export OMP_NUM_THREADS=1
+
+# Use "srun" to launch the job
+
+srun --unbuffered --distribution=block:block --hint=nomultithread ./bin/main
