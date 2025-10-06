@@ -1,0 +1,13 @@
+Scatter example:
+After scatter:
+[Rank 0] Array: 0 1 
+[Rank 0] Array: 0 1 
+[Rank 1] Array: 2 3 
+[Rank 2] Array: 4 5 
+[Rank 3] Array: 6 7 
+[Rank 5] Array: 10 11 
+[Rank 6] Array: 12 13 
+[Rank 7] Array: 14 15 
+[Rank 8] Array: 16 17 
+[Rank 9] Array: 18 19 
+[Rank 4] Array: 8 9 

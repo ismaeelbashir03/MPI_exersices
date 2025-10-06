@@ -1,17 +1,89 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <mpi.h>
 
 /*
  * A custom implementation of broadcast
+ *
+ * buffer: pointer to data to be broadcasted
+ * count: number of elements in the buffer
+ * datatype: MPI datatype of the elements in the buffer
+ * src: rank of the source processor
+ * dsts: array of destination ranks (can be NULL to broadcast to all)
+ * comm: MPI communicator
  */
-int my_mpi_broadcast(void *buffer, int count, MPI_Datatype datatype, int src, int *dsts, MPI_Comm comm) {}
+int my_mpi_broadcast(void *buffer, int count, MPI_Datatype datatype, int src, int *dsts, MPI_Comm comm) {
+	int rank, size;
+	MPI_Comm_rank(comm, &rank);
+	MPI_Comm_size(comm, &size);
+
+	// if user did not provide destinations, we can just send to all
+	if (dsts == NULL) {
+		if (rank == src) {
+			for (int i = 0; i < size; i++) {
+				if (i != src) {
+					MPI_Send(buffer, count, datatype, i, 0, comm);
+				}
+			}
+		} else {
+			MPI_Recv(buffer, count, datatype, src, 0, comm, MPI_STATUS_IGNORE);
+		}
+	} else {
+		int is_dst = 0;
+		for (int i = 0; dsts[i] != -1; i++) {
+			if (rank == dsts[i]) {
+				is_dst = 1;
+				break;
+			}
+		}
+
+		if (rank == src) {
+			for (int i = 0; dsts[i] != -1; i++) {
+				MPI_Send(buffer, count, datatype, dsts[i], 0, comm);
+			}
+		} else if (is_dst) {
+			MPI_Recv(buffer, count, datatype, src, 0, comm, MPI_STATUS_IGNORE);
+		}
+	}
+
+	return 0;
+}
 
 /*
  * A custom implementation of scatter
+ * 
+ * sendbuf: pointer to data to be sent (only significant at root)
+ * sendcount: number of elements sent to each process
+ * sendtype: MPI datatype of the elements in the send buffer
+ * recvbuf: pointer to buffer to receive data (significant at all processes)
+ * recvcount: number of elements in the receive buffer
+ * comm: MPI communicator
  */
-int my_mpi_scatter() {}
+int my_mpi_scatter(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Comm comm) {
+    int rank, size;
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &size);
+
+    if (rank == 0) {
+      for (int i = 0; i < size; i++) {
+        if (i == 0) {
+          // rank 0 just copies from sendbuf to recvbuf
+          memcpy(recvbuf, sendbuf, sendcount * sizeof(sendtype));
+          continue;
+        }
+        // we should send the section that corrosponds to the rank (for example rank 2 gets section 2 of buffer)
+        int typesize;
+        MPI_Type_size(sendtype, &typesize);
+        char *shifted_buffer = (char *)sendbuf + (i * sendcount) * typesize;
+        MPI_Send(shifted_buffer, sendcount, sendtype, i, 0, comm);
+      }
+    } else {
+    	MPI_Recv(recvbuf, recvcount, sendtype, 0, 0, comm, MPI_STATUS_IGNORE);
+	}
+    return 0;
+  }
 
 /*
  * Function to get string prefix for the current MPI rank (for printing)
@@ -31,8 +103,9 @@ int my_mpi_scatter() {}
 #define mpi_print_int_array(x, size) { \
 	mpi_printf("Array: "); \
 	for (int i = 0; i < size; i++) { \
-		mpi_printf("%d ", x[i]); \
+		printf("%d ", x[i]); \
 	} \
+  printf("\n"); \
 } \
 
 /*
