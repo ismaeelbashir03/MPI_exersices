@@ -83,69 +83,7 @@ int my_mpi_scatter(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *re
     	MPI_Recv(recvbuf, recvcount, sendtype, 0, 0, comm, MPI_STATUS_IGNORE);
 	}
     return 0;
-}
-
-/*
-  * A custom implementation of broadcast to multiple specific destinations using mpi collective operations
-  *
-  * buffer: pointer to data to be broadcasted
-  * count: number of elements in the buffer
-  * datatype: MPI datatype of the elements in the buffer
-  * src: rank of the source processor
-  * dsts: array of destination ranks (terminated by -1)
-  * comm: MPI communicator
-  */
-int my_mpi_broadcast_collective(void *buffer, int count, MPI_Datatype datatype, int src, int *dsts, MPI_Comm comm) {
-    int rank, size;
-    MPI_Comm_rank(comm, &rank);
-    MPI_Comm_size(comm, &size);
-
-    if (dsts == NULL) {
-        // just use the standard MPI_Bcast
-        MPI_Bcast(buffer, count, datatype, src, comm);
-        return 0;
-    }
-
-    MPI_Group world_group, new_group;
-    MPI_Comm_group(comm, &world_group);
-
-    int group_ranks[size];
-    int group_size = 0;
-
-    group_ranks[group_size++] = src;
-    for (int i = 0; dsts[i] != -1; i++) {
-        group_ranks[group_size++] = dsts[i];
-    }
-
-    MPI_Group_incl(world_group, group_size, group_ranks, &new_group);
-
-    MPI_Comm new_comm;
-    MPI_Comm_create(comm, new_group, &new_comm);
-
-    if (new_comm != MPI_COMM_NULL) {
-        MPI_Bcast(buffer, count, datatype, 0, new_comm);
-        MPI_Comm_free(&new_comm);
-    }
-
-    MPI_Group_free(&new_group);
-    MPI_Group_free(&world_group);
-
-    return 0;
-}
-
-/*
- * A custom implementation of scatter using mpi collective operations
- * sendbuf: pointer to data to be sent (only significant at root)
- * sendcount: number of elements sent to each process
- * sendtype: MPI datatype of the elements in the send buffer
- * recvbuf: pointer to buffer to receive data (significant at all processes)
- * recvcount: number of elements in the receive buffer
- * comm: MPI communicator
- */
-int my_mpi_scatter_collective(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Comm comm) {
-	MPI_Scatter(sendbuf, sendcount, sendtype, recvbuf, recvcount, sendtype, 0, comm);
-	return 0;
-}
+  }
 
 /*
  * Function to get string prefix for the current MPI rank (for printing)

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Slurm job options (name, compute nodes, job time)
-#SBATCH --ntasks=10
+#SBATCH --ntasks=4
 #SBATCH --nodes=1
 #SBATCH --job-name=hello
 #SBATCH --time=00:01:00
@@ -10,7 +10,7 @@
 #SBATCH --partition=standard
 #SBATCH --tasks-per-node=128
 #SBATCH --qos=standard
-#SBATCH --account=m25ext-s2213219
+#SBATCH --account=m25ext
 
 export OMP_NUM_THREADS=1
 
